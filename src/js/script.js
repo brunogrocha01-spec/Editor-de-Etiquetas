@@ -33,9 +33,7 @@ document.getElementById('dropdownClientes').addEventListener('change', function(
 
 
 function gerarEtiqueta() {
-    //const data = document.getElementById('data').value;
-    const destinatario = document.getElementById('dropdownClientes').value;
-    //const autor = document.getElementById('autor').value;
+
     const canhotosRaw = document.getElementById('canhotos').value;
 
     const numeros = canhotosRaw
@@ -43,47 +41,71 @@ function gerarEtiqueta() {
         .filter(n => /^\d+$/.test(n))
         .sort((a, b) => Number(a) - Number(b));
 
-    // 1. Obter o número que mais "ocupa espaço"
-    const maiorNumero = numeros.reduce((a, b) => (a.length > b.length ? a : b));
 
-    // 2. Medir largura com canvas
+    let tamanhoFonte = 16;
+
+    if (numeros.length > 300) tamanhoFonte = 10;
+    if (numeros.length > 600) tamanhoFonte = 8;
+    if (numeros.length > 900) tamanhoFonte = 6;
+
+
+    const maiorNumero = numeros.reduce((a,b)=>
+        a.length > b.length ? a : b
+    );
+
+
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    ctx.font = '16px Arial'; // igual ao estilo das células
-    const textoWidth = ctx.measureText(maiorNumero).width;
 
-    // 3. Adicionar padding e borda: 4px padding esquerdo + 4px direito + bordas (suponha 2px total)
-    const larguraCelula = textoWidth + 8 + 2;
+    ctx.font = `${tamanhoFonte}px Arial`;
 
-    // 4. Calcular quantas células cabem em 973px
+    const larguraNumero = ctx.measureText(maiorNumero).width;
+
+
+    const larguraCelula = larguraNumero + 4;
+
+
     const colunasPorLinha = Math.floor(973 / larguraCelula);
 
-    // 5. Montar tabela
-    let tabelaHTML = '<table id="minhaTabela" style="border-collapse: collapse;">';
 
-    for (let i = 0; i < numeros.length; i += colunasPorLinha) {
-        tabelaHTML += '<tr>';
-        const linha = numeros.slice(i, i + colunasPorLinha);
-        linha.forEach(n => {
-            tabelaHTML += `<td style="border: 1px solid black; padding: 4px; font-size: 16px;">${n}</td>`;
-        });
-        tabelaHTML += '</tr>';
-    }
-    tabelaHTML += '</table>';
+    let tabelaHTML =
+    '<table id="minhaTabela" style="border-collapse:collapse;">';
 
 
+    numeros.forEach((n,index)=>{
+
+        if(index % colunasPorLinha === 0){
+            tabelaHTML += "<tr>";
+        }
 
 
-    //document.getElementById('dados-etiqueta').innerHTML = texto;
-    document.getElementById('tabela-canhotos').innerHTML = tabelaHTML;
+        tabelaHTML +=
+        `<td style="
+        border:1px solid black;
+        padding:1px;
+        font-size:${tamanhoFonte}px;">
+        ${n}
+        </td>`;
 
-    const tabela = document.getElementById('minhaTabela');
-    if (tabela.offsetWidth > 973 || tabela.offsetHeight > 225) {
-        //alert("A tabela ultrapassou o tamanho aceito. Tente reduzir o número de canhotos.")
-        document.getElementById("alerta").innerText = "A tabela ultrapassou o tamanho aceito. Tente reduzir o número de canhotos.";
-    } else {
-        document.getElementById("alerta").innerText = "";
-    }
+
+        if(
+        index % colunasPorLinha === colunasPorLinha-1
+        ){
+            tabelaHTML += "</tr>";
+        }
+
+    });
+
+
+    tabelaHTML += "</table>";
+
+
+    document.getElementById('tabela-canhotos')
+    .innerHTML = tabelaHTML;
+
+
+    document.getElementById("alerta").innerText = "";
+
 }
 
 let posicaoSelecionada = null;
@@ -115,44 +137,127 @@ function fecharModal() {
 }
 
 async function gerarPDFComImagemNaPosicao(posicao) {
-    const content = document.getElementById("content");
 
-    const canvas = await html2canvas(content, {
-        scale: 2,
-        useCORS: true,
-    });
 
-    const imgData = canvas.toDataURL("image/png");
+const content = document.getElementById("content");
 
-    const paginaLargura = 210;
-    const paginaAltura = 297;
 
-    const larguraEtiqueta = 150; // mm
-    const alturaEtiqueta = 49; // mm
-    const etiquetasPorLinha = 1;
-    const espacamentoHorizontal = 0;
-    const espacamentoVertical = 1;
-    const margemEsquerda = 30;
-    const margemSuperior = 26.8;
+const canvas = await html2canvas(content,{
+    scale:2,
+    useCORS:true
+});
 
-    const idx = parseInt(posicao) - 1;
-    const linha = Math.floor(idx / etiquetasPorLinha);
-    const coluna = idx % etiquetasPorLinha;
 
-    const posX = margemEsquerda + coluna * (larguraEtiqueta + espacamentoHorizontal);
-    const posY = margemSuperior + linha * (alturaEtiqueta + espacamentoVertical);
+const imgData = canvas.toDataURL("image/png");
 
-    const {
-        jsPDF
-    } = window.jspdf;
-    const pdf = new jsPDF({
-        unit: "mm",
-        format: "a4",
-        orientation: "portrait"
-    });
 
-    pdf.addImage(imgData, "PNG", posX, posY, larguraEtiqueta, alturaEtiqueta);
-    pdf.save("etiqueta.pdf");
+const {
+ jsPDF
+}=window.jspdf;
+
+
+
+const pdf = new jsPDF({
+ unit:"mm",
+ format:"a4",
+ orientation:"portrait"
+});
+
+
+
+const larguraEtiqueta = 150;
+const alturaEtiqueta = 49;
+
+
+const paginaLargura = 210;
+
+
+
+const margemEsquerda = 30;
+const margemSuperior = 26.8;
+
+
+
+const totalAltura = canvas.height;
+
+
+
+const alturaPorEtiqueta =
+canvas.height *
+(alturaEtiqueta / canvas.height);
+
+
+
+let paginas =
+Math.ceil(
+totalAltura /
+(canvas.height * 0.55)
+);
+
+
+
+if(paginas < 1){
+paginas = 1;
+}
+
+
+
+
+for(let i=0;i<paginas;i++){
+
+
+if(i>0){
+pdf.addPage();
+}
+
+
+
+const corte = document.createElement("canvas");
+
+corte.width = canvas.width;
+corte.height =
+Math.min(
+canvas.height,
+canvas.height*0.55
+);
+
+
+
+const ctx =
+corte.getContext("2d");
+
+
+
+ctx.drawImage(
+canvas,
+0,
+-i*corte.height
+);
+
+
+
+const imagem =
+corte.toDataURL("image/png");
+
+
+
+pdf.addImage(
+imagem,
+"PNG",
+margemEsquerda,
+margemSuperior,
+larguraEtiqueta,
+alturaEtiqueta
+);
+
+
+
+}
+
+
+
+pdf.save("etiqueta.pdf");
+
 }
 
 const textoArea = document.getElementById('canhotos');

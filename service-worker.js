@@ -1,4 +1,4 @@
-const CACHE_NAME = "meu-app-cache-v1";
+const CACHE_NAME = "meu-app-cache-v3";
 const urlsToCache = [
   "index.html",
   "favicon.ico",

@@ -5,7 +5,7 @@
       <meta charset="UTF-8">
       <title>Editor de Etiquetas</title>
       <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
-      <link rel="stylesheet" href="src/css/styles.css">
+      <link rel="stylesheet" href="src/css/styles.css?v=20260701">
       <script src="src/js/jspdf.umd.min.js"></script>
       <script src="src/js/html2canvas.min.js"></script>
       <link rel="manifest" href="manifest.json">
@@ -34,6 +34,7 @@
           <label for="canhotos">Canhotos (cole os números separados por espaço, vírgula ou enter):</label>
           <textarea id="canhotos" rows="6" placeholder="Ex: 550100 550101 550108..."></textarea>
           <label id="alerta" style="color: red;"></label>
+          <div id="resumo-etiquetas" aria-live="polite"></div>
           
 
           <label>
@@ -67,7 +68,8 @@
         <button id="cancelar-btn" onclick="fecharModal()">Cancelar</button>
       </div>
 
-      <script src="src/js/script.js"></script>
+      <div id="print-host" aria-hidden="true"></div>
+      <script src="src/js/script.js?v=20260701"></script>
   </body>
 
   </html>
